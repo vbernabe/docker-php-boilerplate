@@ -34,6 +34,7 @@ $ vi docker-compose.yml
 | ./redis-data | Redis data |
 | ./logs/nginx/ | Nginx Logfiles |
 | ./config/certs | SSL Certificates |
+| ./php | Used on composer |
 
 #### Initial start
 ```sh
