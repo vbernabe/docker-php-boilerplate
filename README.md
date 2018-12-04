@@ -35,7 +35,13 @@ $ vi docker-compose.yml
 | ./logs/nginx/ | Nginx Logfiles |
 | ./config/certs | SSL Certificates |
 
-#### To Start
+#### Initial start
+```sh
+$ cd docker-php-boilerplate
+$ docker-compose build --no-cache
+```
+
+#### Subsequent Start
 ```sh
 $ cd docker-php-boilerplate
 $ docker-compose up -d
