@@ -1,0 +1,78 @@
+# vbernabe 
+# This is a docker config to run containers with nginx, php, mariadb, redis, composer, adminer
+# Environment variables setup the db user and pass so use it to connect 
+# Volumes will map the folder from your host machine to the container
+# Links I use links to let the app container know to connect to the db container
+version: "3.1"
+services:
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: org-php-project-name
+    # Start below containers first
+    depends_on:
+      - mariadb
+      - redis
+    volumes: 
+      - "./src/public/app:/var/www/html/public/app:delegated"
+      - "./config/php/php.ini:/usr/local/etc/php/php.ini"
+    environment:
+      - "DB_HOST=mariadb" #connect to this mariadb host - use this on your src code config
+      - "REDIS_HOST=redis" #connect to this redis host - use this on your src code config
+    links:
+      - mariadb
+      - redis
+
+  composer:
+    image: composer:latest
+    container_name: org-composer-project-name
+    volumes:
+        - "./src/public/app:/app" # location of your composer.json file
+    command: install
+
+  mariadb:
+    image: mariadb:latest
+    container_name: org-mariadb-project-name
+    ports:
+      - "3306:3306"
+    volumes:
+      - "./db-data:/var/lib/mysql" # location of mysql data
+    environment:
+      - "MYSQL_USER=orguser"
+      - "MYSQL_PASSWORD=xxxxxxxxxxxxxxxxxxx"
+      - "MYSQL_ROOT_PASSWORD=xxxxxxxxxxxxxxxxxxx"
+
+  nginx:
+    image: nginx:latest
+    container_name: org-nginx-project-name
+    depends_on:
+      - composer
+      - php
+    environment:
+      - FASTCGI_PASS_HOST=php
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "./src/public/app:/var/www/html/public/app" # location of document root
+      - "./config/nginx/default.conf:/etc/nginx/conf.d/default.conf" # your nginx config
+      - "./config/certs:/etc/nginx/certs" # location of nginx ssl files
+      - "./logs/nginx:/var/log/nginx" # location of nginx logs so you can tail logs outside i.e. no need to login to container
+    links:
+      - php
+
+  adminer:
+    image: adminer
+    container_name: org-adminer-project-name
+    ports:
+      - 8080:8080
+
+  redis:
+    image: redis:latest
+    container_name: org-redis-project-name
+    ports:
+      - "6379:6379"
+    volumes:
+      - "./redis-data:/data" # location of redis data
+    command: redis-server --appendonly yes
